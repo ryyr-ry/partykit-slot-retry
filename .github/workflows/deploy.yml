@@ -1,0 +1,35 @@
+name: PartyKit Deploy Retry
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - run: npm ci
+      - name: Retry deploy with random intervals
+        env:
+          PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
+          PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
+        run: |
+          for i in $(seq 1 20); do
+            DELAY=$((RANDOM % 15))
+            echo "Attempt $i/20: Waiting ${DELAY}s..."
+            sleep $DELAY
+            echo "Attempt $i: Deploying..."
+            if npx partykit deploy 2>&1 | tee deploy.log; then
+              echo "SUCCESS on attempt $i!"
+              break
+            fi
+            echo "Attempt $i failed. Retrying..."
+          done
