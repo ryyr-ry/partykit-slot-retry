@@ -2,7 +2,7 @@ name: PartyKit Deploy Retry
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -18,21 +18,22 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Retry deploy with random intervals
+        timeout-minutes: 120
         env:
           PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
           PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
         run: |
           set -eo pipefail
-          for i in $(seq 1 20); do
-            DELAY=$((RANDOM % 15))
-            echo "Attempt $i/20: Waiting ${DELAY}s..."
-            sleep $DELAY
-            echo "Attempt $i: Deploying..."
+          for cycle in $(seq 1 20); do
+            wait_time=$((300 + RANDOM % 60))
+            echo "=== Cycle $cycle/20: Next attempt in ${wait_time}s ==="
+            sleep $wait_time
+            echo "Attempting deploy..."
             if npx partykit deploy 2>&1 | tee deploy.log; then
-              echo "SUCCESS on attempt $i!"
+              echo "SUCCESS on cycle $cycle!"
               exit 0
             fi
-            echo "Attempt $i failed. Retrying..."
+            echo "Cycle $cycle failed. Will retry in ~5min..."
           done
-          echo "All 20 attempts failed."
+          echo "All cycles failed."
           exit 1
