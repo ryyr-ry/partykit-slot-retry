@@ -1,0 +1,5 @@
+{
+  "name": "partykit-slot-test",
+  "main": "server.ts",
+  "compatibilityDate": "2024-06-26"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "partykit-slot-test",
+  "dependencies": {
+    "partykit": "0.0.115"
+  }
+}
