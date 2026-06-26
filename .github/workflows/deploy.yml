@@ -27,6 +27,7 @@ jobs:
             echo "Attempt $i/20: Waiting ${DELAY}s..."
             sleep $DELAY
             echo "Attempt $i: Deploying..."
+            set -o pipefail
             if npx partykit deploy 2>&1 | tee deploy.log; then
               echo "SUCCESS on attempt $i!"
               break
