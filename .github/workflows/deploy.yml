@@ -30,7 +30,9 @@ jobs:
             echo "Attempt $i: Deploying..."
             if npx partykit deploy 2>&1 | tee deploy.log; then
               echo "SUCCESS on attempt $i!"
-              break
+              exit 0
             fi
             echo "Attempt $i failed. Retrying..."
           done
+          echo "All 20 attempts failed."
+          exit 1
