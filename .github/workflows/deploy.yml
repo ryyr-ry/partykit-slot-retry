@@ -18,22 +18,30 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Retry deploy with random intervals
-        timeout-minutes: 120
+        timeout-minutes: 130
         env:
           PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
           PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
         run: |
           set -eo pipefail
-          for cycle in $(seq 1 20); do
-            wait_time=$((300 + RANDOM % 60))
-            echo "=== Cycle $cycle/20: Next attempt in ${wait_time}s ==="
-            sleep $wait_time
-            echo "Attempting deploy..."
-            if npx partykit deploy 2>&1 | tee deploy.log; then
-              echo "SUCCESS on cycle $cycle!"
-              exit 0
+          # 120min / 5min = 24 cycles, 20 attempts each = 480 total attempts
+          for cycle in $(seq 1 24); do
+            echo "=== 5-min Cycle $cycle/24 ==="
+            for attempt in $(seq 1 20); do
+              DELAY=$((5 + RANDOM % 10))
+              echo "  Attempt $attempt/20: waiting ${DELAY}s..."
+              sleep $DELAY
+              echo "  Attempting deploy..."
+              if npx partykit deploy 2>&1 | tee -a deploy.log; then
+                echo "  SUCCESS!"
+                exit 0
+              fi
+              echo "  Attempt $attempt failed."
+            done
+            # ~200s spent, wait remaining ~100s to complete 5min cycle
+            if [ $cycle -lt 24 ]; then
+              sleep 100
             fi
-            echo "Cycle $cycle failed. Will retry in ~5min..."
           done
-          echo "All cycles failed."
+          echo "All 480 attempts failed."
           exit 1
