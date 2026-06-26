@@ -22,12 +22,12 @@ jobs:
           PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
           PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
         run: |
+          set -eo pipefail
           for i in $(seq 1 20); do
             DELAY=$((RANDOM % 15))
             echo "Attempt $i/20: Waiting ${DELAY}s..."
             sleep $DELAY
             echo "Attempt $i: Deploying..."
-            set -o pipefail
             if npx partykit deploy 2>&1 | tee deploy.log; then
               echo "SUCCESS on attempt $i!"
               break
