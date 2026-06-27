@@ -18,7 +18,7 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Retry deploy with random intervals
-        timeout-minutes: 130
+        timeout-minutes: 161
         env:
           PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
           PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
