@@ -8,20 +8,20 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: "npm"
-      - run: npm ci
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
       - name: Retry deploy with random intervals
         timeout-minutes: 161
         env:
           PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
           PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eo pipefail
           # 120min / 5min = 24 cycles, 20 attempts each = 480 total attempts
@@ -32,8 +32,10 @@ jobs:
               echo "  Attempt $attempt/20: waiting ${DELAY}s..."
               sleep $DELAY
               echo "  Attempting deploy..."
-              if npx partykit deploy 2>&1 | tee -a deploy.log; then
+              if bunx partykit deploy 2>&1 | tee -a deploy.log; then
                 echo "  SUCCESS!"
+                # Stop the schedule so it does not keep running forever.
+                gh workflow disable "PartyKit Deploy Retry" --repo "$GITHUB_REPOSITORY" || true
                 exit 0
               fi
               echo "  Attempt $attempt failed."
