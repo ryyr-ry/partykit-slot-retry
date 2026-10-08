@@ -1,5 +1,5 @@
 {
-  "name": "slesty",
+  "name": "api",
   "dependencies": {
     "partykit": "0.0.115"
   }
